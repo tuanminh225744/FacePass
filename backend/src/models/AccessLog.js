@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const accessLogSchema = new mongoose.Schema({
   personId: {
@@ -24,4 +24,4 @@ const accessLogSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-module.exports = mongoose.model('AccessLog', accessLogSchema);
+export default mongoose.model('AccessLog', accessLogSchema);

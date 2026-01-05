@@ -10,7 +10,7 @@ import {
     toggleUserStatus,
     deleteUser
 } from '../controllers/userController.js';
-import { protect, authorize } from '../middleware/authMiddleware.js';
+import { protect, authorize } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 

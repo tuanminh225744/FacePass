@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const faceEmbeddingSchema = new mongoose.Schema({
   residentId: {
@@ -12,4 +12,4 @@ const faceEmbeddingSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-module.exports = mongoose.model('FaceEmbedding', faceEmbeddingSchema);
+export default mongoose.model('FaceEmbedding', faceEmbeddingSchema);
