@@ -7,8 +7,7 @@ import {
     getUserById,
     updateUser,
     resetPassword,
-    toggleUserStatus,
-    deleteUser
+    toggleUserStatus
 } from '../controllers/userController.js';
 import { protect, authorize } from '../middlewares/authMiddleware.js';
 
@@ -24,9 +23,7 @@ router.get('/', protect, authorize(['admin']), getAllUsers);
 
 router.get('/:id', protect, authorize(['admin']), getUserById);
 router.put('/:id', protect, authorize(['admin']), updateUser);
-router.delete('/:id', protect, authorize(['admin']), deleteUser);
 
-// Route chuyên biệt admin
 router.put('/:id/reset-password', protect, authorize(['admin']), resetPassword);
 router.patch('/:id/status', protect, authorize(['admin']), toggleUserStatus);
 
