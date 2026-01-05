@@ -57,7 +57,7 @@ const changePassword = async (req, res) => {
 // @access  Private (Admin)
 const createUser = async (req, res) => {
     try {
-        const { username, password, role } = req.body;
+        const { username, password, role, name, apartment, cccd, phoneNumber } = req.body;
 
         if (!username || !password || !role) {
             return res.status(400).json({ message: 'Vui lòng điền đủ thông tin.' });
@@ -66,6 +66,16 @@ const createUser = async (req, res) => {
         const userExists = await User.findOne({ username });
         if (userExists) {
             return res.status(400).json({ message: 'Username đã tồn tại.' });
+        }
+
+        if (role === 'resident') {
+            if (!name || !apartment || !cccd || !phoneNumber) {
+                 return res.status(400).json({ message: 'Cư dân cần điền: tên, căn hộ, CCDD và SĐT.' });
+            }
+            const residentExists = await Resident.findOne({ cccd });
+            if (residentExists) {
+                return res.status(400).json({ message: 'CCCD đã tồn tại.' });
+            }
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -79,6 +89,16 @@ const createUser = async (req, res) => {
         });
 
         if (user) {
+            if (role === 'resident') {
+                await Resident.create({
+                    name,
+                    apartment,
+                    cccd,
+                    phoneNumber,
+                    userId: user._id
+                });
+            }
+
             res.status(201).json({
                 _id: user._id,
                 username: user.username,
@@ -187,26 +207,6 @@ const toggleUserStatus = async (req, res) => {
     }
 };
 
-// @desc    Xóa User
-// @route   DELETE /api/users/:id
-// @access  Private (Admin)
-const deleteUser = async (req, res) => {
-    try {
-        const user = await User.findById(req.params.id);
-
-        if (user) {
-            await user.deleteOne(); // Dùng deleteOne() cho document
-            // Có thể cần xóa thêm Resident liên quan nếu có
-            // await Resident.deleteOne({ userId: user._id }); 
-            res.json({ message: 'Đã xóa user.' });
-        } else {
-            res.status(404).json({ message: 'User không tìm thấy.' });
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Lỗi xóa user.' });
-    }
-};
 
 export {
     getProfile,
@@ -216,6 +216,5 @@ export {
     getUserById,
     updateUser,
     resetPassword,
-    toggleUserStatus,
-    deleteUser
+    toggleUserStatus
 };

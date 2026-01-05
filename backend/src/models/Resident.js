@@ -9,6 +9,15 @@ const residentSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  cccd: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  phoneNumber: {
+    type: String,
+    required: true
+  },
   active: {
     type: Boolean,
     default: true
