@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import residentRoutes from './routes/residentRoutes.js';
+import accessRoutes from './routes/accessRoutes.js';
 
 const app = express();
 
@@ -14,5 +16,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/residents', residentRoutes);
+app.use('/api/access', accessRoutes);
 
 export default app;
