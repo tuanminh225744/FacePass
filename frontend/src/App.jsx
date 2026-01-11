@@ -1,35 +1,39 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
+
+// Placeholder Pages (will be replaced later)
+const Login = () => <div>Login Page</div>;
+const AdminDashboard = () => <div>Admin Dashboard</div>;
+const GuardDashboard = () => <div>Guard Dashboard</div>;
+const ResidentDashboard = () => <div>Resident Dashboard</div>;
+const Unauthorized = () => <div>Unauthorized</div>;
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+          <Route path="/admin/*" element={<AdminDashboard />} />
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={['guard']} />}>
+          <Route path="/guard/*" element={<GuardDashboard />} />
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={['resident']} />}>
+          <Route path="/resident/*" element={<ResidentDashboard />} />
+        </Route>
+
+        {/* Default Redirect */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<div>404 Not Found</div>} />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
