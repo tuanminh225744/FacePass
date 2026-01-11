@@ -2,8 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 
-// Placeholder Pages (will be replaced later)
-const Login = () => <div>Login Page</div>;
+import Login from './pages/Login/Login';
+
 const AdminDashboard = () => <div>Admin Dashboard</div>;
 const GuardDashboard = () => <div>Guard Dashboard</div>;
 const ResidentDashboard = () => <div>Resident Dashboard</div>;

@@ -30,12 +30,19 @@ const login = async (req, res) => {
         const accessToken = generateAccessToken(user._id, user.role);
         const refreshToken = generateRefreshToken(user._id);
 
+        // Lưu Refresh Token vào HTTP-Only Cookie
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
         res.json({
             _id: user._id,
             username: user.username,
             role: user.role,
-            accessToken,
-            refreshToken
+            accessToken
         });
     } catch (error) {
         console.error(error);
@@ -47,10 +54,10 @@ const login = async (req, res) => {
 // @route   POST /api/auth/refresh
 // @access  Public
 const refreshAccessToken = async (req, res) => {
-    const { refreshToken } = req.body;
+    const refreshToken = req.cookies.refreshToken;
 
     if (!refreshToken) {
-        return res.status(400).json({ message: 'Yêu cầu Refresh Token.' });
+        return res.status(401).json({ message: 'Không tìm thấy Refresh Token trong Cookie.' });
     }
 
     try {
@@ -70,8 +77,17 @@ const refreshAccessToken = async (req, res) => {
         res.json({ accessToken: newAccessToken });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Lỗi server khi refresh token.' });
+        res.status(403).json({ message: 'Lỗi xác thực Refresh Token.' });
     }
 };
 
-export { login, refreshAccessToken };
+const logout = (req, res) => {
+    res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Lax'
+    });
+    res.json({ message: 'Đăng xuất thành công.' });
+};
+
+export { login, refreshAccessToken, logout };

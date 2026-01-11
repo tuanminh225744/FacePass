@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import residentRoutes from './routes/residentRoutes.js';
@@ -8,7 +9,11 @@ import visitorRoutes from './routes/visitorRoutes.js';
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+    origin: [process.env.FRONTEND_URL, 'http://localhost:5173'], // Frontend URL
+    credentials: true
+}));
+app.use(cookieParser());
 app.use(express.json());
 
 app.get('/', (req, res) => {

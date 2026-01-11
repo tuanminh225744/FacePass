@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from '../services/api';
+import { jwtDecode } from 'jwt-decode';
+import api, { setAccessToken } from '../services/api';
 import { connectSocket, disconnectSocket } from '../services/socket';
 
 const AuthContext = createContext(null);
@@ -9,31 +10,57 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            // Validate token or get user info
-            // For now, assuming token persistence is enough or we fetch profile
-            // api.get('/auth/me').then(...)
+        const initAuth = async () => {
+            try {
+                const response = await api.post('/auth/refresh');
+                const { accessToken } = response.data;
 
-            // Simulate user load for now or decode token
-            // setUser({ ...decodedUser });
-            setLoading(false);
-        } else {
-            setLoading(false);
-        }
+                setAccessToken(accessToken);
+
+                const decoded = jwtDecode(accessToken);
+
+                setUser({ _id: decoded.id, role: decoded.role });
+                connectSocket(accessToken);
+
+            } catch (error) {
+                console.log("Session init failed or expired");
+                localStorage.removeItem('user');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        initAuth();
     }, []);
 
     const login = async (username, password) => {
-        // const response = await api.post('/auth/login', { username, password });
-        // const { token, user } = response.data;
-        // localStorage.setItem('token', token);
-        // setUser(user);
-        // connectSocket(token);
-        console.log('Login placeholder');
+        try {
+            const response = await api.post('/auth/login', { username, password });
+            const { accessToken, role, _id, username: uName } = response.data;
+
+            setAccessToken(accessToken);
+
+            const userData = { _id, username: uName, role };
+            setUser(userData);
+            connectSocket(accessToken);
+
+            return { success: true, role }; // Return role for redirect
+        } catch (error) {
+            console.error("Login failed:", error);
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Đăng nhập thất bại'
+            };
+        }
     };
 
-    const logout = () => {
-        localStorage.removeItem('token');
+    const logout = async () => {
+        try {
+            await api.post('/auth/logout'); // Need to implement this backend route to clear cookie
+        } catch (e) {
+            console.error("Logout error", e);
+        }
+        setAccessToken(null);
         setUser(null);
         disconnectSocket();
     };
