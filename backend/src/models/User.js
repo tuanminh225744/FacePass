@@ -16,10 +16,9 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: 'resident'
   },
-  status: {
-    type: String,
-    enum: ['active', 'inactive'],
-    default: 'active'
+  active: {
+    type: Boolean,
+    default: true
   }
 }, { timestamps: true });
 

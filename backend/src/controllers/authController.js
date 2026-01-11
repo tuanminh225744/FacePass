@@ -16,7 +16,7 @@ const login = async (req, res) => {
         if (!user) {
             return res.status(401).json({ message: 'Tên đăng nhập hoặc mật khẩu không chính xác.' });
         }
-        if (user.status === 'inactive') {
+        if (!user.active) {
             return res.status(403).json({ message: 'Tài khoản đã bị khóa.' });
         }
 
@@ -55,13 +55,13 @@ const refreshAccessToken = async (req, res) => {
 
     try {
         const decoded = verifyRefreshToken(refreshToken);
-        
+
         if (!decoded) {
             return res.status(403).json({ message: 'Refresh Token không hợp lệ hoặc hết hạn.' });
         }
 
         const user = await User.findById(decoded.id);
-        if (!user || user.status === 'inactive') {
+        if (!user || !user.active) {
             return res.status(403).json({ message: 'User không tồn tại hoặc bị khóa.' });
         }
 

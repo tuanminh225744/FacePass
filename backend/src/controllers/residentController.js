@@ -4,6 +4,7 @@ import FaceEmbedding from '../models/FaceEmbedding.js';
 import { getFaceEmbedding } from '../services/aiService.js';
 import bcrypt from 'bcryptjs';
 
+// --- EXISTING: REGISTER ---
 export const registerResident = async (req, res) => {
     try {
         const { username, password, name, apartment, cccd, phoneNumber } = req.body;
@@ -37,7 +38,7 @@ export const registerResident = async (req, res) => {
             username,
             password: hashedPassword,
             role: 'resident',
-            status: 'active'
+            active: true
         });
         await newUser.save();
 
@@ -104,5 +105,103 @@ export const registerResident = async (req, res) => {
         console.error('Register resident error:', error);
         // Clean up data if needed (though caught in steps above)
         res.status(500).json({ success: false, message: 'Lỗi server: ' + error.message });
+    }
+};
+
+// --- NEW CRUDS ---
+
+// @desc    Lấy danh sách cư dân (có thể lọc theo tên, căn hộ)
+// @route   GET /api/residents
+export const getAllResidents = async (req, res) => {
+    try {
+        const { name, apartment, page = 1, limit = 10 } = req.query;
+        const query = {};
+
+        if (name) {
+            query.name = { $regex: name, $options: 'i' };
+        }
+        if (apartment) {
+            query.apartment = { $regex: apartment, $options: 'i' };
+        }
+
+        const residents = await Resident.find(query)
+            .limit(limit * 1)
+            .skip((page - 1) * limit)
+            // .populate('userId', 'username status') // Lấy kèm thông tin user
+            .sort({ createdAt: -1 });
+
+        const count = await Resident.countDocuments(query);
+
+        res.json({
+            success: true,
+            data: residents,
+            totalPages: Math.ceil(count / limit),
+            currentPage: Number(page)
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi lấy danh sách cư dân' });
+    }
+};
+
+// @desc    Lấy chi tiết cư dân
+// @route   GET /api/residents/:id
+export const getResidentById = async (req, res) => {
+    try {
+        const resident = await Resident.findById(req.params.id)
+        // .populate('userId', 'username role status email'); // Populate thêm nếu User có email
+
+        if (!resident) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy cư dân' });
+        }
+        res.json({ success: true, data: resident });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi lấy thông tin cư dân' });
+    }
+};
+
+// @desc    Cập nhật thông tin cư dân (Chỉ Info text)
+// @route   PUT /api/residents/:id
+export const updateResident = async (req, res) => {
+    try {
+        const { name, apartment, phoneNumber } = req.body;
+
+        // Không cho phép update CCCD (định danh) hoặc userId ở API này
+        const updatedResident = await Resident.findByIdAndUpdate(
+            req.params.id,
+            { name, apartment, phoneNumber },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedResident) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy cư dân' });
+        }
+
+        res.json({ success: true, data: updatedResident, message: 'Cập nhật thành công' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi cập nhật cư dân' });
+    }
+};
+
+// @desc    Xóa mềm cư dân (Soft Delete)
+// @route   DELETE /api/residents/:id
+export const deleteResident = async (req, res) => {
+    try {
+        const resident = await Resident.findById(req.params.id);
+        if (!resident) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy cư dân' });
+        }
+
+        // Soft delete: set active = false
+        resident.active = false;
+        await resident.save();
+
+        // Tùy chọn: Disable luôn user account tương ứng?
+        if (resident.userId) {
+            await User.findByIdAndUpdate(resident.userId, { active: false });
+        }
+
+        res.json({ success: true, message: 'Đã vô hiệu hóa cư dân (Soft Delete)' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi xóa cư dân' });
     }
 };

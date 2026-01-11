@@ -14,7 +14,7 @@ const getProfile = async (req, res) => {
             _id: req.user._id,
             username: req.user.username,
             role: req.user.role,
-            status: req.user.status,
+            active: req.user.active,
             createdAt: req.user.createdAt
         });
     } else {
@@ -70,7 +70,7 @@ const createUser = async (req, res) => {
 
         if (role === 'resident') {
             if (!name || !apartment || !cccd || !phoneNumber) {
-                 return res.status(400).json({ message: 'Cư dân cần điền: tên, căn hộ, CCDD và SĐT.' });
+                return res.status(400).json({ message: 'Cư dân cần điền: tên, căn hộ, CCDD và SĐT.' });
             }
             const residentExists = await Resident.findOne({ cccd });
             if (residentExists) {
@@ -85,7 +85,7 @@ const createUser = async (req, res) => {
             username,
             password: hashedPassword,
             role,
-            status: 'active'
+            active: true
         });
 
         if (user) {
@@ -102,7 +102,8 @@ const createUser = async (req, res) => {
             res.status(201).json({
                 _id: user._id,
                 username: user.username,
-                role: user.role
+                role: user.role,
+                active: user.active
             });
         } else {
             res.status(400).json({ message: 'Dữ liệu user không hợp lệ.' });
@@ -151,14 +152,16 @@ const updateUser = async (req, res) => {
         if (user) {
             user.username = req.body.username || user.username;
             user.role = req.body.role || user.role;
-            // Không cho phép update password ở đây, dùng endpoint riêng
+            if (req.body.active !== undefined) {
+                user.active = req.body.active;
+            }
 
             const updatedUser = await user.save();
             res.json({
                 _id: updatedUser._id,
                 username: updatedUser.username,
                 role: updatedUser.role,
-                status: updatedUser.status
+                active: updatedUser.active
             });
         } else {
             res.status(404).json({ message: 'User không tìm thấy.' });
@@ -196,9 +199,9 @@ const toggleUserStatus = async (req, res) => {
         const user = await User.findById(req.params.id);
 
         if (user) {
-            user.status = user.status === 'active' ? 'inactive' : 'active';
+            user.active = !user.active;
             await user.save();
-            res.json({ message: `Đã chuyển trạng thái user sang ${user.status}.`, status: user.status });
+            res.json({ message: `Đã chuyển trạng thái user sang ${user.active ? 'active' : 'inactive'}.`, active: user.active });
         } else {
             res.status(404).json({ message: 'User không tìm thấy.' });
         }

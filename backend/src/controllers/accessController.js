@@ -29,7 +29,7 @@ export const checkIn = async (req, res) => {
             // 3. Ghi log (Nếu cần logic phức tạp hơn như check timeOut thì thêm sau)
             const log = new AccessLog({
                 personId: resident._id, // Lưu ý: AccessLog schema cần trường này ref tới Resident hoặc Visitor
-                type: 'resident',
+                personType: 'Resident',
                 timeIn: new Date(),
                 method: 'face'
             });
