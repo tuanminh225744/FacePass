@@ -21,6 +21,12 @@ const accessLogSchema = new mongoose.Schema({
     type: String,
     enum: ['face', 'manual'],
     required: true
+  },
+  score: {
+    type: Number
+  },
+  deviceId: {
+    type: String
   }
 }, { timestamps: true });
 

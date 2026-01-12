@@ -31,7 +31,9 @@ export const checkIn = async (req, res) => {
                 personId: resident._id, // Lưu ý: AccessLog schema cần trường này ref tới Resident hoặc Visitor
                 personType: 'Resident',
                 timeIn: new Date(),
-                method: 'face'
+                method: 'face',
+                score: matchResult.score,
+                deviceId: 'CAM-01' // Mock device ID
             });
             await log.save();
 
@@ -53,5 +55,42 @@ export const checkIn = async (req, res) => {
     } catch (error) {
         console.error('Check-in error:', error);
         res.status(500).json({ success: false, message: 'Lỗi server' });
+    }
+};
+
+export const getAccessLogs = async (req, res) => {
+    try {
+        const { date, type, page = 1, limit = 20 } = req.query;
+        const query = {};
+
+        if (date) {
+            const start = new Date(date);
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(date);
+            end.setHours(23, 59, 59, 999);
+            query.timeIn = { $gte: start, $lte: end };
+        }
+
+        if (type) {
+            query.personType = type; // Resident, Visitor, Unknown
+        }
+
+        const logs = await AccessLog.find(query)
+            .sort({ timeIn: -1 })
+            .limit(limit * 1)
+            .skip((page - 1) * limit)
+            .populate('personId', 'name apartment phoneNumber'); // Populate resident info
+
+        const count = await AccessLog.countDocuments(query);
+
+        res.json({
+            success: true,
+            data: logs,
+            totalPages: Math.ceil(count / limit),
+            currentPage: Number(page)
+        });
+    } catch (error) {
+        console.error('Get logs error:', error);
+        res.status(500).json({ success: false, message: 'Lỗi lấy nhật ký ra vào' });
     }
 };

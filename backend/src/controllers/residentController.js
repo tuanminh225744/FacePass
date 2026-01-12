@@ -123,6 +123,12 @@ export const getAllResidents = async (req, res) => {
         if (apartment) {
             query.apartment = { $regex: apartment, $options: 'i' };
         }
+        if (req.query.phoneNumber) {
+            query.phoneNumber = { $regex: req.query.phoneNumber, $options: 'i' };
+        }
+        if (req.query.cccd) {
+            query.cccd = { $regex: req.query.cccd, $options: 'i' };
+        }
 
         const residents = await Resident.find(query)
             .limit(limit * 1)

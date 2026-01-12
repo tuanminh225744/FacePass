@@ -72,7 +72,7 @@ const refreshAccessToken = async (req, res) => {
             return res.status(403).json({ message: 'User không tồn tại hoặc bị khóa.' });
         }
 
-        const newAccessToken = generateAccessToken(user._id, user.role);
+        const newAccessToken = generateAccessToken(user._id, user.role, user.username);
 
         res.json({ accessToken: newAccessToken });
     } catch (error) {

@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
 
                 const decoded = jwtDecode(accessToken);
 
-                setUser({ _id: decoded.id, role: decoded.role });
+                setUser({ _id: decoded.id, role: decoded.role, username: decoded.username });
                 connectSocket(accessToken);
 
             } catch (error) {
