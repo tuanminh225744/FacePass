@@ -262,11 +262,6 @@ const Residents = () => {
                         </Button>
                         <Button style={{ marginLeft: 8 }} onClick={() => {
                             setFilters({ name: '', apartment: '', phoneNumber: '', cccd: '' });
-                            // Manually trigger fetch logic via window reload or prop hack?
-                            // Just simple reload is acceptable or need separate useEffect dep.
-                            // For now user clicks Search again after clear or we manually call fetchResidents with empty obj.
-                            // Currently fetchResidents reads from state 'filters' which is async updated.
-                            // We will fix later if UX issue.
                         }}>
                             Xóa lọc
                         </Button>

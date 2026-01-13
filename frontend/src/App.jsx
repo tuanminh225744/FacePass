@@ -9,9 +9,11 @@ import Users from './pages/Admin/Users';
 import AdminDashboard from './pages/Admin/Dashboard';
 import Residents from './pages/Admin/Residents';
 import AccessLogs from './pages/Admin/AccessLogs';
+// import GuardLayout from './components/Layout/GuardLayout';
+import GuardDashboard from './pages/Guard/Dashboard';
 
 // Placeholder Pages (will be replaced later)
-const GuardDashboard = () => <div>Guard Dashboard</div>;
+// const GuardDashboard = () => <div>Guard Dashboard</div>;
 const ResidentDashboard = () => <div>Resident Dashboard</div>;
 const Unauthorized = () => <div>Unauthorized</div>;
 
