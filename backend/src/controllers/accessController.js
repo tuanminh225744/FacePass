@@ -1,4 +1,6 @@
 import AccessLog from '../models/AccessLog.js';
+import Resident from '../models/Resident.js';
+import Visitor from '../models/Visitor.js';
 import { getFaceEmbedding } from '../services/aiService.js';
 import { findMatchingResident } from '../services/faceService.js';
 
@@ -54,6 +56,66 @@ export const checkIn = async (req, res) => {
 
     } catch (error) {
         console.error('Check-in error:', error);
+        res.status(500).json({ success: false, message: 'Lỗi server' });
+    }
+};
+
+export const manualCheckIn = async (req, res) => {
+    try {
+        const { personType, residentId, name, reason } = req.body;
+
+        let personId = null;
+
+        if (personType === 'Resident') {
+            if (!residentId) {
+                return res.status(400).json({ success: false, message: 'Thiếu ID cư dân' });
+            }
+            const resident = await Resident.findById(residentId);
+            if (!resident) {
+                return res.status(404).json({ success: false, message: 'Không tìm thấy cư dân' });
+            }
+            personId = resident._id;
+        } else if (personType === 'Visitor') {
+            if (!name || !reason) {
+                return res.status(400).json({ success: false, message: 'Thiếu tên khách hoặc lý do' });
+            }
+            // Create new Visitor
+            const newVisitor = new Visitor({
+                name,
+                purpose: reason,
+                // cccd is optional now
+            });
+            await newVisitor.save();
+            personId = newVisitor._id;
+        } else {
+            return res.status(400).json({ success: false, message: 'Loại đối tượng không hợp lệ' });
+        }
+
+        const log = new AccessLog({
+            personId: personId,
+            personType: personType,
+            timeIn: new Date(),
+            method: 'manual',
+            score: null,
+            deviceId: 'GUARD-PC'
+        });
+
+        await log.save();
+
+        const io = req.app.get('io');
+        if (io) {
+            // Populate to show specific info
+            if (personType === 'Resident') {
+                await log.populate('personId', 'name apartment phoneNumber');
+            } else {
+                await log.populate('personId', 'name purpose');
+            }
+            io.emit('new_access_log', log);
+        }
+
+        res.json({ success: true, message: 'Ghi nhận thành công' });
+    } catch (error) {
+        console.error('Manual check-in error:', error);
         res.status(500).json({ success: false, message: 'Lỗi server' });
     }
 };

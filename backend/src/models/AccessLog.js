@@ -4,7 +4,7 @@ const accessLogSchema = new mongoose.Schema({
   personId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    refPath: 'personType' // Dynamic ref based on personType
+    refPath: 'personType'
   },
   personType: {
     type: String,

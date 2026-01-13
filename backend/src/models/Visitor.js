@@ -7,7 +7,7 @@ const visitorSchema = new mongoose.Schema({
   },
   cccd: {
     type: String,
-    required: true
+    required: false
   },
   purpose: {
     type: String,
