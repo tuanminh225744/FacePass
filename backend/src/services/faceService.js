@@ -26,7 +26,7 @@ export const findMatchingResident = async (targetEmbedding, threshold = 0.6) => 
         }
     }
 
-    if (maxScore >= threshold && bestMatch) {
+    if (maxScore >= threshold && bestMatch && bestMatch.residentId) {
         return {
             match: true,
             resident: bestMatch.residentId,

@@ -28,16 +28,39 @@ export const checkIn = async (req, res) => {
         if (matchResult.match) {
             const resident = matchResult.resident;
 
-            // 3. Ghi log (Nếu cần logic phức tạp hơn như check timeOut thì thêm sau)
+            // 3. Check duplicate log within 5s
+            const lastLog = await AccessLog.findOne({
+                personId: resident._id,
+                timeIn: { $gte: new Date(Date.now() - 5000) }
+            }).sort({ timeIn: -1 });
+
+            if (lastLog) {
+                return res.json({
+                    success: true,
+                    identified: true,
+                    resident: resident,
+                    score: matchResult.score,
+                    message: 'Already checked in recently'
+                });
+            }
+
+            // 4. Ghi log moi
             const log = new AccessLog({
-                personId: resident._id, // Lưu ý: AccessLog schema cần trường này ref tới Resident hoặc Visitor
+                personId: resident._id,
                 personType: 'Resident',
                 timeIn: new Date(),
                 method: 'face',
                 score: matchResult.score,
-                deviceId: 'CAM-01' // Mock device ID
+                deviceId: 'CAM-01'
             });
             await log.save();
+
+            // Emit Socket Event
+            const io = req.app.get('io');
+            if (io) {
+                await log.populate('personId', 'name apartment phoneNumber');
+                io.emit('new_access_log', log);
+            }
 
             return res.json({
                 success: true,

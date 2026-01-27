@@ -15,6 +15,10 @@ const GuardDashboard = () => {
     const webcamRef = useRef(null);
     const [processing, setProcessing] = useState(false);
 
+    // Camera Devices
+    const [devices, setDevices] = useState([]);
+    const [selectedDeviceId, setSelectedDeviceId] = useState(null);
+
     // Result States
     const [lastCheck, setLastCheck] = useState(null);
 
@@ -31,15 +35,31 @@ const GuardDashboard = () => {
     const [residentOptions, setResidentOptions] = useState([]);
     const [searching, setSearching] = useState(false);
 
+    // Initial Load, Socket & Camera Devices
+    // Fetch Cameras Function
+    const getCameras = async () => {
+        try {
+            await navigator.mediaDevices.getUserMedia({ video: true });
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(device => device.kind === 'videoinput');
+            setDevices(videoDevices);
+
+            if (videoDevices.length > 0 && !selectedDeviceId) {
+                setSelectedDeviceId(videoDevices[0].deviceId);
+            }
+        } catch (err) {
+            console.error("Error fetching devices:", err);
+            message.error("Vui lòng cấp quyền Camera!");
+        }
+    };
+
     // Initial Load & Socket
     useEffect(() => {
         fetchRecentLogs();
+        getCameras();
+
         socket.on('new_access_log', (log) => {
             setRecentLogs(prev => [log, ...prev].slice(0, 20));
-            // Provide visual feedback/sound here if needed
-            if (log.method === 'face') {
-                // If it was a face check-in, update the main display too if we want sync
-            }
         });
         return () => socket.off('new_access_log');
     }, []);
@@ -112,17 +132,11 @@ const GuardDashboard = () => {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
-            // Only update display if identified or if it's a significant error?
-            // If identified, show big success.
-            // If not idenfitied, maybe just flash a warning or ignore to prevent spamming UI?
-            // "ve nut mo cua thuc chat tam thoi chi la gui mot api len backend de ghi log..."
-
             if (response.data.success && response.data.identified) {
                 setLastCheck(response.data);
-                message.success({ content: `Xin chào: ${response.data.resident.name}`, key: 'checkin', duration: 2 });
+                // message.success({ content: `Xin chào: ${response.data.resident.name}`, key: 'checkin', duration: 2 });
             } else {
-                // Silent fail or minimal UI update for unknown faces to avoid flickering
-                // setLastCheck(response.data); // Uncomment if we want to show "Stranger" alert
+                // Silent fail
             }
         } catch (error) {
             // console.error(error);
@@ -151,16 +165,40 @@ const GuardDashboard = () => {
     return (
         <Row gutter={[16, 16]}>
             <Col xs={24} md={16}>
-                <Card title={<Space><CameraOutlined /> Camera Giám sát</Space>} bordered={false} bodyStyle={{ padding: 0 }}>
+                <Card
+                    title={<Space><CameraOutlined /> Camera Giám sát</Space>}
+                    bordered={false}
+                    bodyStyle={{ padding: 0 }}
+                    extra={
+                        <div style={{ display: 'flex', gap: 10 }}>
+                            <Button icon={<ReloadOutlined />} onClick={() => getCameras()}>Refresh Cam</Button>
+                            <Select
+                                placeholder="Chọn Camera"
+                                style={{ width: 250 }}
+                                onChange={setSelectedDeviceId}
+                                value={selectedDeviceId}
+                            >
+                                {devices.map((device, key) => (
+                                    <Option key={key} value={device.deviceId}>
+                                        {device.label || `Camera ${key + 1}`}
+                                    </Option>
+                                ))}
+                            </Select>
+                        </div>
+                    }
+                >
                     <div style={{ position: 'relative', background: 'black', height: 480, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
-                        <Webcam
-                            audio={false}
-                            ref={webcamRef}
-                            screenshotFormat="image/jpeg"
-                            width="100%"
-                            height="100%"
-                            videoConstraints={{ facingMode: "user" }}
-                        />
+                        {selectedDeviceId && (
+                            <Webcam
+                                key={selectedDeviceId}
+                                audio={false}
+                                ref={webcamRef}
+                                screenshotFormat="image/jpeg"
+                                width="100%"
+                                height="100%"
+                                videoConstraints={{ deviceId: { exact: selectedDeviceId } }}
+                            />
+                        )}
                         {processing && (
                             <div style={{ position: 'absolute', top: 10, right: 10 }}>
                                 <Tag color="processing" icon={<ReloadOutlined spin />}>AI Processing...</Tag>
@@ -180,7 +218,7 @@ const GuardDashboard = () => {
                     </div>
                 </Card>
 
-                {/* Last Auto Check-in Result */}
+                {/* Last Auto Check-in Result
                 {lastCheck && lastCheck.identified && (
                     <Card style={{ marginTop: 16, borderColor: '#52c41a' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
@@ -195,7 +233,7 @@ const GuardDashboard = () => {
                             </div>
                         </div>
                     </Card>
-                )}
+                )} */}
             </Col>
 
             <Col xs={24} md={8}>

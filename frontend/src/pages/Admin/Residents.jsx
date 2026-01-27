@@ -85,7 +85,7 @@ const Residents = () => {
         formData.append('apartment', values.apartment);
         formData.append('cccd', values.cccd);
         formData.append('phoneNumber', values.phoneNumber);
-        formData.append('image', fileList[0].originFileObj);
+        formData.append('image', fileList[0].originFileObj || fileList[0]);
 
         try {
             setLoading(true);
