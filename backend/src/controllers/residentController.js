@@ -190,6 +190,28 @@ export const updateResident = async (req, res) => {
 
 // @desc    Xóa mềm cư dân (Soft Delete)
 // @route   DELETE /api/residents/:id
+// @desc    Lấy thông tin profile của chính cư dân đang đăng nhập
+// @route   GET /api/residents/me
+export const getCurrentResident = async (req, res) => {
+    try {
+        // req.user được set từ verifyToken middleware
+        if (!req.user || !req.user._id) {
+            return res.status(401).json({ success: false, message: 'Chưa đăng nhập' });
+        }
+
+        const resident = await Resident.findOne({ userId: req.user._id });
+
+        if (!resident) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy thông tin cư dân liên kết với tài khoản này' });
+        }
+
+        res.json({ success: true, data: resident });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Lỗi lấy thông tin cá nhân' });
+    }
+};
+
 export const deleteResident = async (req, res) => {
     try {
         const resident = await Resident.findById(req.params.id);

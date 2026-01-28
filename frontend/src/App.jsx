@@ -9,12 +9,14 @@ import Users from './pages/Admin/Users';
 import AdminDashboard from './pages/Admin/Dashboard';
 import Residents from './pages/Admin/Residents';
 import AccessLogs from './pages/Admin/AccessLogs';
-// import GuardLayout from './components/Layout/GuardLayout';
+import GuardLayout from './components/Layout/GuardLayout';
 import GuardDashboard from './pages/Guard/Dashboard';
+import ResidentLayout from './components/Layout/ResidentLayout';
+import ResidentDashboard from './pages/Resident/Dashboard';
 
 // Placeholder Pages (will be replaced later)
 // const GuardDashboard = () => <div>Guard Dashboard</div>;
-const ResidentDashboard = () => <div>Resident Dashboard</div>;
+// const ResidentDashboard = () => <div>Resident Dashboard</div>;
 const Unauthorized = () => <div>Unauthorized</div>;
 
 function App() {
@@ -33,12 +35,24 @@ function App() {
           </Route>
         </Route>
 
-        <Route element={<ProtectedRoute allowedRoles={['guard']} />}>
-          <Route path="/guard/*" element={<GuardDashboard />} />
+        {/* Guard Routes */}
+        <Route path="/guard" element={
+          <ProtectedRoute allowedRoles={['guard']}>
+            <GuardLayout />
+          </ProtectedRoute>
+        } >
+          <Route index element={<GuardDashboard />} />
         </Route>
 
-        <Route element={<ProtectedRoute allowedRoles={['resident']} />}>
-          <Route path="/resident/*" element={<ResidentDashboard />} />
+        {/* Resident Routes */}
+        <Route path="/resident" element={
+          <ProtectedRoute allowedRoles={['resident']}>
+            <ResidentLayout />
+          </ProtectedRoute>
+        }>
+          <Route path="dashboard" element={<ResidentDashboard />} />
+          {/* Redirect default to dashboard */}
+          <Route index element={<Navigate to="dashboard" replace />} />
         </Route>
 
         {/* Default Redirect */}

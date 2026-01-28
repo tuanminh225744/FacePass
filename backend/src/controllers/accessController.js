@@ -148,6 +148,21 @@ export const getAccessLogs = async (req, res) => {
         const { date, type, page = 1, limit = 20 } = req.query;
         const query = {};
 
+        // Security Check for Resident Role
+        if (req.user && req.user.role === 'resident') {
+            // Find the resident profile linked to this user
+            // We need to import Resident model if not already imported or available
+            // (Assuming 'Resident' is imported at top)
+            const residentProfile = await Resident.findOne({ userId: req.user._id });
+
+            if (!residentProfile) {
+                return res.status(403).json({ success: false, message: 'Không tìm thấy hồ sơ cư dân.' });
+            }
+
+            // FORCE override filter
+            query.personId = residentProfile._id;
+        }
+
         if (date) {
             const start = new Date(date);
             start.setHours(0, 0, 0, 0);

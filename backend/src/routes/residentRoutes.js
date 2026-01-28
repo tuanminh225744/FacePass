@@ -5,12 +5,18 @@ import {
     getAllResidents,
     getResidentById,
     updateResident,
-    deleteResident
+    deleteResident,
+    getCurrentResident
 } from '../controllers/residentController.js';
 
 const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
+
+import { protect } from '../middlewares/authMiddleware.js';
+
+// Get Me (Must be before /:id)
+router.get('/me', protect, getCurrentResident);
 
 router.post('/register', upload.single('image'), registerResident);
 router.get('/', getAllResidents);
