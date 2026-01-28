@@ -1,5 +1,8 @@
 import app from './app.js';
 import connectDB from './config/db.js';
+import accessRoutes from './routes/accessRoutes.js';
+import visitorRoutes from './routes/visitorRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -18,6 +21,8 @@ const io = new Server(server, {
 });
 
 app.set('io', io);
+
+app.use('/api/admin', adminRoutes);
 
 io.on('connection', (socket) => {
     // console.log('Client connected:', socket.id);
