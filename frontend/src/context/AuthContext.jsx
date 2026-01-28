@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
             setUser(userData);
             connectSocket(accessToken);
 
-            return { success: true, role }; // Return role for redirect
+            return { success: true, role };
         } catch (error) {
             console.error("Login failed:", error);
             return {
@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
-            await api.post('/auth/logout'); // Need to implement this backend route to clear cookie
+            await api.post('/auth/logout');
         } catch (e) {
             console.error("Logout error", e);
         }

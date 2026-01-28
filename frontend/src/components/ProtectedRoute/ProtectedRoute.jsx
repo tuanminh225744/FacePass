@@ -1,12 +1,13 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import Loading from '../Common/Loading';
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
     const { user, loading } = useAuth();
 
     if (loading) {
-        return <div>Loading...</div>; // TODO: Replace with better loading spinner
+        return <Loading />;
     }
 
     if (!user) {
@@ -14,8 +15,7 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
     }
 
     if (allowedRoles && !allowedRoles.includes(user.role)) {
-        // User role not authorized
-        return <Navigate to="/" replace />; // Or unauthorized page
+        return <Navigate to="/" replace />;
     }
 
     return children ? children : <Outlet />;
