@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Webcam from 'react-webcam';
-import { Row, Col, Card, Button, List, Tag, Typography, Modal, Form, Input, Select, message, Radio, Space, AutoComplete } from 'antd';
+import { Row, Col, Card, Button, List, Tag, Typography, Modal, Form, Input, Select, message, Radio, Space, AutoComplete, notification } from 'antd';
 import { CameraOutlined, CheckCircleOutlined, UserOutlined, ClockCircleOutlined, FormOutlined, WarningOutlined, ReloadOutlined } from '@ant-design/icons';
 import api from '../../services/api';
 import moment from 'moment';
@@ -34,6 +34,9 @@ const GuardDashboard = () => {
     // Resident Search State
     const [residentOptions, setResidentOptions] = useState([]);
     const [searching, setSearching] = useState(false);
+
+    const unknownCooldownRef = useRef(0);
+    const COOLDOWN_TIME = 5000;
 
     // Initial Load, Socket & Camera Devices
     // Fetch Cameras Function
@@ -136,6 +139,17 @@ const GuardDashboard = () => {
                 setLastCheck(response.data);
                 // message.success({ content: `Xin chào: ${response.data.resident.name}`, key: 'checkin', duration: 2 });
             } else {
+                const now = Date.now();
+
+                if (now - unknownCooldownRef.current > COOLDOWN_TIME) {
+                    notification.error({
+                        message: 'Không xác định được khuôn mặt',
+                        description: 'Vui lòng thử lại',
+                        duration: 2,
+                    });
+
+                    unknownCooldownRef.current = now;
+                }
                 // Silent fail
             }
         } catch (error) {

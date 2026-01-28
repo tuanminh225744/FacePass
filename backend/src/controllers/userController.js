@@ -214,6 +214,12 @@ const toggleUserStatus = async (req, res) => {
         if (user) {
             user.active = !user.active;
             await user.save();
+
+            // Sync with Resident if user is resident
+            if (user.role === 'resident') {
+                await Resident.findOneAndUpdate({ userId: user._id }, { active: user.active });
+            }
+
             res.json({ message: `Đã chuyển trạng thái user sang ${user.active ? 'active' : 'inactive'}.`, active: user.active });
         } else {
             res.status(404).json({ message: 'User không tìm thấy.' });

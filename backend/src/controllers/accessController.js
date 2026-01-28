@@ -28,10 +28,10 @@ export const checkIn = async (req, res) => {
         if (matchResult.match && matchResult.resident.active) {
             const resident = matchResult.resident;
 
-            // 3. Check duplicate log within 5s
+            // 3. Check duplicate log within 10s
             const lastLog = await AccessLog.findOne({
                 personId: resident._id,
-                timeIn: { $gte: new Date(Date.now() - 5000) }
+                timeIn: { $gte: new Date(Date.now() - 10000) }
             }).sort({ timeIn: -1 });
 
             if (lastLog) {
