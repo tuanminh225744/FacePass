@@ -13,11 +13,12 @@ import GuardLayout from './components/Layout/GuardLayout';
 import GuardDashboard from './pages/Guard/Dashboard';
 import ResidentLayout from './components/Layout/ResidentLayout';
 import ResidentDashboard from './pages/Resident/Dashboard';
+import NotFound from './pages/NotFound/NotFound';
 
 // Placeholder Pages (will be replaced later)
 // const GuardDashboard = () => <div>Guard Dashboard</div>;
 // const ResidentDashboard = () => <div>Resident Dashboard</div>;
-const Unauthorized = () => <div>Unauthorized</div>;
+// const Unauthorized = () => <div>Unauthorized</div>;
 
 function App() {
   return (
@@ -57,7 +58,7 @@ function App() {
 
         {/* Default Redirect */}
         <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<div>404 Not Found</div>} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
