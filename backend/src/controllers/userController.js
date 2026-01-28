@@ -119,7 +119,20 @@ const createUser = async (req, res) => {
 // @access  Private (Admin)
 const getAllUsers = async (req, res) => {
     try {
-        const users = await User.find({}).select('-password');
+        const { username, role, active } = req.query;
+        const query = {};
+
+        if (username) {
+            query.username = { $regex: username, $options: 'i' };
+        }
+        if (role) {
+            query.role = role;
+        }
+        if (active) {
+            query.active = active === 'true';
+        }
+
+        const users = await User.find(query).select('-password').sort({ createdAt: -1 });
         res.json(users);
     } catch (error) {
         res.status(500).json({ message: 'Lỗi lấy danh sách user.' });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Space, Tag, Modal, Form, Input, Upload, message, Tooltip, Popconfirm, Row, Col, Card } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined, UserOutlined, SearchOutlined } from '@ant-design/icons';
+import { Table, Button, Space, Tag, Modal, Form, Input, Upload, message, Tooltip, Popconfirm, Row, Col, Card, Switch } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined, UserOutlined, SearchOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons';
 import api from '../../services/api';
 
 const Residents = () => {
@@ -12,7 +12,8 @@ const Residents = () => {
         name: '',
         apartment: '',
         phoneNumber: '',
-        cccd: ''
+        cccd: '',
+        active: true
     });
 
     // States for Register Modal
@@ -28,8 +29,8 @@ const Residents = () => {
     const fetchResidents = async () => {
         setLoading(true);
         try {
-            // Remove empty keys
-            const params = Object.fromEntries(Object.entries(filters).filter(([_, v]) => v != null && v !== ''));
+            // Remove empty keys and false values
+            const params = Object.fromEntries(Object.entries(filters).filter(([_, v]) => v != null && v !== '' && v !== false));
 
             const response = await api.get('/residents', { params });
             // Check success and data payload structure
@@ -47,7 +48,7 @@ const Residents = () => {
 
     useEffect(() => {
         fetchResidents();
-    }, []); // Only mount
+    }, [filters.active]); // Reload when active toggle changes
 
     const handleSearch = () => {
         fetchResidents();
@@ -58,7 +59,8 @@ const Residents = () => {
             name: '',
             apartment: '',
             phoneNumber: '',
-            cccd: ''
+            cccd: '',
+            active: false
         });
         // We need to trigger fetch after state update, but state update is async.
         // Quick workaround: pass empty obj directly or use useEffect on filters (but that might trigger too often)
@@ -124,15 +126,15 @@ const Residents = () => {
         }
     };
 
-    const handleDelete = async (id) => {
+    const handleToggleStatus = async (record) => {
         try {
-            const response = await api.delete(`/residents/${id}`);
+            const response = await api.patch(`/residents/${record._id}/status`);
             if (response.data.success) {
-                message.success('Đã vô hiệu hóa cư dân.');
+                message.success(response.data.message);
                 fetchResidents();
             }
         } catch (error) {
-            message.error('Lỗi khi xóa cư dân.');
+            message.error('Lỗi thay đổi trạng thái.');
         }
     };
 
@@ -141,7 +143,8 @@ const Residents = () => {
         editForm.setFieldsValue({
             name: record.name,
             apartment: record.apartment,
-            phoneNumber: record.phoneNumber
+            phoneNumber: record.phoneNumber,
+            cccd: record.cccd
         });
         setEditModalVisible(true);
     };
@@ -186,7 +189,7 @@ const Residents = () => {
             dataIndex: 'active',
             key: 'active',
             render: (active) => (
-                <Tag color={active ? 'success' : 'default'}>
+                <Tag color={active ? 'success' : 'error'}>
                     {active ? 'ACTIVE' : 'INACTIVE'}
                 </Tag>
             ),
@@ -200,12 +203,16 @@ const Residents = () => {
                         <Button icon={<EditOutlined />} onClick={() => openEditModal(record)} />
                     </Tooltip>
 
-                    <Tooltip title="Vô hiệu hóa">
+                    <Tooltip title={record.active ? "Khóa tài khoản" : "Mở khóa"}>
                         <Popconfirm
-                            title="Bạn chắc chắn muốn xóa cư dân này?"
-                            onConfirm={() => handleDelete(record._id)}
+                            title={record.active ? "Bạn muốn khóa cư dân này?" : "Bạn muốn mở khóa cư dân này?"}
+                            onConfirm={() => handleToggleStatus(record)}
                         >
-                            <Button icon={<DeleteOutlined />} danger disabled={!record.active} />
+                            <Button
+                                icon={record.active ? <LockOutlined /> : <UnlockOutlined />}
+                                danger={record.active}
+                                type={!record.active ? 'primary' : 'default'}
+                            />
                         </Popconfirm>
                     </Tooltip>
                 </Space>
@@ -224,47 +231,60 @@ const Residents = () => {
 
             {/* Filter Section */}
             <Card style={{ marginBottom: 16 }}>
-                <Form layout="inline"
-                    onFinish={handleSearch}
-                >
-                    <Form.Item name="name">
-                        <Input
-                            placeholder="Tên cư dân"
-                            prefix={<UserOutlined style={{ color: 'rgba(0,0,0,.25)' }} />}
-                            value={filters.name}
-                            onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+                <Form layout="inline" onFinish={handleSearch} style={{ display: 'flex', width: '100%' }}>
+
+                    {/* Left Side Filters */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, flex: 1 }}>
+                        <Form.Item name="name" style={{ marginRight: 0 }}>
+                            <Input
+                                placeholder="Tên cư dân"
+                                prefix={<UserOutlined style={{ color: 'rgba(0,0,0,.25)' }} />}
+                                value={filters.name}
+                                onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+                            />
+                        </Form.Item>
+                        <Form.Item name="apartment" style={{ marginRight: 0 }}>
+                            <Input
+                                placeholder="Căn hộ"
+                                value={filters.apartment}
+                                onChange={(e) => setFilters({ ...filters, apartment: e.target.value })}
+                            />
+                        </Form.Item>
+                        <Form.Item name="phoneNumber" style={{ marginRight: 0 }}>
+                            <Input
+                                placeholder="SĐT"
+                                value={filters.phoneNumber}
+                                onChange={(e) => setFilters({ ...filters, phoneNumber: e.target.value })}
+                            />
+                        </Form.Item>
+                        <Form.Item name="cccd" style={{ marginRight: 0 }}>
+                            <Input
+                                placeholder="CCCD"
+                                value={filters.cccd}
+                                onChange={(e) => setFilters({ ...filters, cccd: e.target.value })}
+                            />
+                        </Form.Item>
+
+                        <Form.Item style={{ marginRight: 0 }}>
+                            <Button type="primary" htmlType="submit" icon={<SearchOutlined />} loading={loading}>
+                                Tìm kiếm
+                            </Button>
+                        </Form.Item>
+                        <Form.Item style={{ marginRight: 0 }}>
+                            <Button onClick={() => {
+                                setFilters({ name: '', apartment: '', phoneNumber: '', cccd: '', active: false });
+                            }}>
+                                Xóa
+                            </Button>
+                        </Form.Item>
+                    </div>
+
+                    {/* Right Side Toggle */}
+                    <Form.Item label="Ẩn Inactive" style={{ marginLeft: 'auto', marginRight: 0 }}>
+                        <Switch
+                            checked={filters.active}
+                            onChange={(checked) => setFilters({ ...filters, active: checked })}
                         />
-                    </Form.Item>
-                    <Form.Item name="apartment">
-                        <Input
-                            placeholder="Căn hộ"
-                            value={filters.apartment}
-                            onChange={(e) => setFilters({ ...filters, apartment: e.target.value })}
-                        />
-                    </Form.Item>
-                    <Form.Item name="phoneNumber">
-                        <Input
-                            placeholder="Số điện thoại"
-                            value={filters.phoneNumber}
-                            onChange={(e) => setFilters({ ...filters, phoneNumber: e.target.value })}
-                        />
-                    </Form.Item>
-                    <Form.Item name="cccd">
-                        <Input
-                            placeholder="CCCD"
-                            value={filters.cccd}
-                            onChange={(e) => setFilters({ ...filters, cccd: e.target.value })}
-                        />
-                    </Form.Item>
-                    <Form.Item style={{ marginTop: 8 }}>
-                        <Button type="primary" htmlType="submit" icon={<SearchOutlined />} loading={loading}>
-                            Tìm kiếm
-                        </Button>
-                        <Button style={{ marginLeft: 8 }} onClick={() => {
-                            setFilters({ name: '', apartment: '', phoneNumber: '', cccd: '' });
-                        }}>
-                            Xóa lọc
-                        </Button>
                     </Form.Item>
                 </Form>
             </Card>
@@ -303,7 +323,7 @@ const Residents = () => {
                                 <Input placeholder="Nguyễn Văn A" />
                             </Form.Item>
                             <Form.Item name="apartment" label="Căn hộ" rules={[{ required: true }]}>
-                                <Input placeholder="A101" />
+                                <Input placeholder="101" />
                             </Form.Item>
                             <Form.Item name="cccd" label="CCCD" rules={[{ required: true }]}>
                                 <Input placeholder="0123456789" />
@@ -332,6 +352,9 @@ const Residents = () => {
             >
                 <Form form={editForm} layout="vertical" onFinish={handleUpdate}>
                     <Form.Item name="name" label="Họ tên" rules={[{ required: true }]}>
+                        <Input />
+                    </Form.Item>
+                    <Form.Item name="cccd" label="CCCD" rules={[{ required: true }]}>
                         <Input />
                     </Form.Item>
                     <Form.Item name="apartment" label="Căn hộ" rules={[{ required: true }]}>

@@ -10,7 +10,7 @@ const cosineSimilarity = (vecA, vecB) => {
     return dotProduct / (magnitudeA * magnitudeB);
 };
 
-export const findMatchingResident = async (targetEmbedding, threshold = 0.6) => {
+export const findMatchingResident = async (targetEmbedding, threshold = 0.7) => {
     // Lấy tất cả embedding từ DB (Lưu ý: Với quy mô lớn cần dùng Vector DB hoặc tối ưu hơn)
     // Với quy mô < 1000 người, load memory vẫn ổn
     const allEmbeddings = await FaceEmbedding.find().populate('residentId');

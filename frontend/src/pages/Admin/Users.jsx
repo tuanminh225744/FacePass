@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Space, Tag, Modal, Form, Input, Select, Switch, message, Tooltip, Popconfirm } from 'antd';
+import { Table, Button, Space, Tag, Modal, Form, Input, Select, Switch, message, Tooltip, Popconfirm, Card } from 'antd';
 import { formToJSON } from 'axios';
-import { PlusOutlined, EditOutlined, DeleteOutlined, LockOutlined, UnlockOutlined, ReloadOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, LockOutlined, UnlockOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import api from '../../services/api';
 
 const { Option } = Select;
@@ -16,10 +16,22 @@ const Users = () => {
     const [resetPassUserId, setResetPassUserId] = useState(null);
     const [resetPassForm] = Form.useForm();
 
+    // Filters
+    const [filters, setFilters] = useState({
+        username: '',
+        role: undefined,
+        active: true
+    });
+
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const response = await api.get('/users');
+            const params = {};
+            if (filters.username) params.username = filters.username;
+            if (filters.role) params.role = filters.role;
+            if (filters.active) params.active = true;
+
+            const response = await api.get('/users', { params });
             setUsers(response.data);
         } catch (error) {
             message.error('Không thể tải danh sách người dùng.');
@@ -30,7 +42,16 @@ const Users = () => {
 
     useEffect(() => {
         fetchUsers();
-    }, []);
+    }, [filters.active]); // Reload when active toggle changes
+
+    const handleSearch = () => {
+        fetchUsers();
+    };
+
+    const handleResetFilters = () => {
+        setFilters({ username: '', role: '', active: false });
+        // fetchUsers(); // Let user click search or auto? Let's just reset state. User clicks search.
+    };
 
     const handleCreateOrUpdate = async (values) => {
         try {
@@ -157,6 +178,45 @@ const Users = () => {
                     Thêm User Mới
                 </Button>
             </div>
+
+            <Card style={{ marginBottom: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                    <Space wrap>
+                        <Input
+                            placeholder="Tìm theo Username"
+                            value={filters.username}
+                            onChange={(e) => setFilters(prev => ({ ...prev, username: e.target.value }))}
+                            style={{ width: 200 }}
+                            prefix={<SearchOutlined />}
+                        />
+                        <Select
+                            placeholder="Chọn vai trò"
+                            value={filters.role}
+                            onChange={(value) => setFilters(prev => ({ ...prev, role: value }))}
+                            style={{ width: 150 }}
+                            allowClear
+                        >
+                            <Option value="admin">Admin</Option>
+                            <Option value="guard">Bảo vệ</Option>
+                            <Option value="resident">Cư dân</Option>
+                        </Select>
+
+                        <Button type="primary" onClick={handleSearch} icon={<SearchOutlined />}>Tìm kiếm</Button>
+                        <Button onClick={() => {
+                            setFilters({ username: '', role: '', active: false });
+                            setTimeout(fetchUsers, 0);
+                        }}>Xóa lọc</Button>
+                    </Space>
+
+                    <Space>
+                        <span>Ẩn Inactive:</span>
+                        <Switch
+                            checked={filters.active}
+                            onChange={(checked) => setFilters(prev => ({ ...prev, active: checked }))}
+                        />
+                    </Space>
+                </div>
+            </Card>
 
             <Table columns={columns} dataSource={users} rowKey="_id" loading={loading} />
 

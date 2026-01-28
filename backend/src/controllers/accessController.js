@@ -25,7 +25,7 @@ export const checkIn = async (req, res) => {
         // 2. Tìm kiếm cư dân khớp
         const matchResult = await findMatchingResident(aiResult.embedding);
 
-        if (matchResult.match) {
+        if (matchResult.match && matchResult.resident.active) {
             const resident = matchResult.resident;
 
             // 3. Check duplicate log within 5s

@@ -6,7 +6,8 @@ import {
     getResidentById,
     updateResident,
     deleteResident,
-    getCurrentResident
+    getCurrentResident,
+    toggleResidentStatus
 } from '../controllers/residentController.js';
 
 const router = express.Router();
@@ -23,5 +24,6 @@ router.get('/', getAllResidents);
 router.get('/:id', getResidentById);
 router.put('/:id', updateResident);
 router.delete('/:id', deleteResident);
+router.patch('/:id/status', toggleResidentStatus); // New route
 
 export default router;

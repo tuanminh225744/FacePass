@@ -129,6 +129,9 @@ export const getAllResidents = async (req, res) => {
         if (req.query.cccd) {
             query.cccd = { $regex: req.query.cccd, $options: 'i' };
         }
+        if (req.query.active) {
+            query.active = req.query.active === 'true';
+        }
 
         const residents = await Resident.find(query)
             .limit(limit * 1)
@@ -169,12 +172,12 @@ export const getResidentById = async (req, res) => {
 // @route   PUT /api/residents/:id
 export const updateResident = async (req, res) => {
     try {
-        const { name, apartment, phoneNumber } = req.body;
+        const { name, apartment, phoneNumber, cccd } = req.body;
 
-        // Không cho phép update CCCD (định danh) hoặc userId ở API này
+        // Cho phép update CCCD, Name, Apartment, PhoneNumber
         const updatedResident = await Resident.findByIdAndUpdate(
             req.params.id,
-            { name, apartment, phoneNumber },
+            { name, apartment, phoneNumber, cccd },
             { new: true, runValidators: true }
         );
 
@@ -209,6 +212,29 @@ export const getCurrentResident = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Lỗi lấy thông tin cá nhân' });
+    }
+};
+
+export const toggleResidentStatus = async (req, res) => {
+    try {
+        const resident = await Resident.findById(req.params.id);
+        if (!resident) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy cư dân' });
+        }
+
+        // Toggle active status
+        resident.active = !resident.active;
+        await resident.save();
+
+        // Sync with User account if exists
+        if (resident.userId) {
+            await User.findByIdAndUpdate(resident.userId, { active: resident.active });
+        }
+
+        const statusMessage = resident.active ? 'Đã mở khóa cư dân' : 'Đã khóa cư dân';
+        res.json({ success: true, message: statusMessage, data: { active: resident.active } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi thay đổi trạng thái cư dân' });
     }
 };
 
