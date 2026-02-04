@@ -42,7 +42,11 @@ api.interceptors.response.use(
         const originalRequest = error.config;
 
         // Prevent infinite loop
-        if (error.response && error.response.status === 401 && !originalRequest._retry) {
+        if (error.response?.status === 401 &&
+            accessToken &&
+            !originalRequest._retry &&
+            !originalRequest.url.includes('/auth/login') &&
+            !originalRequest.url.includes('/auth/refresh')) {
             originalRequest._retry = true;
 
             try {

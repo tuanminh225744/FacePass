@@ -33,8 +33,8 @@ const login = async (req, res) => {
         // Lưu Refresh Token vào HTTP-Only Cookie
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'Lax',
+            secure: true,        // BẮT BUỘC trên HTTPS
+            sameSite: 'none',
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
@@ -84,8 +84,8 @@ const refreshAccessToken = async (req, res) => {
 const logout = (req, res) => {
     res.clearCookie('refreshToken', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'Lax'
+        secure: true,        // BẮT BUỘC trên HTTPS
+        sameSite: 'none',
     });
     res.json({ message: 'Đăng xuất thành công.' });
 };
