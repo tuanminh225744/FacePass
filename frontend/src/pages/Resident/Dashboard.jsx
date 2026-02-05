@@ -136,7 +136,7 @@ const ResidentDashboard = () => {
                         columns={columns}
                         rowKey="_id"
                         loading={loadingLogs}
-                        pagination={{ pageSize: 5 }}
+                        pagination={{ pageSize: 5, showSizeChanger: false }}
                     />
                 </Card>
             </div>

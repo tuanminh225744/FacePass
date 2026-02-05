@@ -254,7 +254,7 @@ const Users = () => {
                         <Select>
                             <Option value="admin">Admin</Option>
                             <Option value="guard">Bảo vệ</Option>
-                            <Option value="resident">Cư dân</Option>
+                            {/* <Option value="resident">Cư dân</Option> */}
                         </Select>
                     </Form.Item>
 

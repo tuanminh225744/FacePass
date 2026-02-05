@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, DatePicker, Select, Button, Tag, Space, Card, message } from 'antd';
+import { Table, DatePicker, Select, Button, Tag, Space, Card, message, Modal, Input } from 'antd';
+import { EyeOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import api from '../../services/api';
 
@@ -11,7 +12,12 @@ const AccessLogs = () => {
     const [loading, setLoading] = useState(false);
     const [filterDate, setFilterDate] = useState(null);
     const [filterType, setFilterType] = useState(null);
-    const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
+    const [filterName, setFilterName] = useState('');
+    const [pagination, setPagination] = useState({
+        current: 1, pageSize: 10, total: 0, showSizeChanger: false
+    });
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [currentReason, setCurrentReason] = useState('');
 
     const fetchLogs = async (page = 1) => {
         setLoading(true);
@@ -25,6 +31,9 @@ const AccessLogs = () => {
             }
             if (filterType) {
                 params.type = filterType;
+            }
+            if (filterName) {
+                params.name = filterName;
             }
 
             const response = await api.get('/access/logs', { params });
@@ -54,6 +63,19 @@ const AccessLogs = () => {
     const handleTableChange = (newPagination) => {
         setPagination(newPagination);
         fetchLogs(newPagination.current);
+    };
+
+    const showReason = (reason) => {
+        setCurrentReason(reason || 'Không có lý do được ghi nhận');
+        setIsModalVisible(true);
+    };
+
+    const handleOk = () => {
+        setIsModalVisible(false);
+    };
+
+    const handleCancel = () => {
+        setIsModalVisible(false);
     };
 
     const columns = [
@@ -94,7 +116,20 @@ const AccessLogs = () => {
             title: 'Phương thức',
             dataIndex: 'method',
             key: 'method',
-            render: (method) => method === 'face' ? <Tag color="blue">FACE ID</Tag> : <Tag>MANUAL</Tag>,
+            render: (method) => method === 'face' ? <Tag color="blue">FACE ID</Tag> : <Tag color="orange">MANUAL</Tag>,
+        },
+        {
+            title: 'Hành động',
+            key: 'action',
+            render: (_, record) => (
+                record.personType === 'Visitor' && (
+                    <Button
+                        type="link"
+                        icon={<EyeOutlined />}
+                        onClick={() => showReason(record.personId?.purpose)}
+                    />
+                )
+            ),
         },
     ];
 
@@ -121,7 +156,16 @@ const AccessLogs = () => {
                         <Option value="Visitor">Khách</Option>
                     </Select>
 
-                    <Button type="primary" onClick={() => fetchLogs(1)}>Làm mới</Button>
+                    <span>Tên:</span>
+                    <Input
+                        placeholder="Tìm theo tên..."
+                        style={{ width: 150 }}
+                        value={filterName}
+                        onChange={(e) => setFilterName(e.target.value)}
+                        onPressEnter={() => fetchLogs(1)}
+                    />
+
+                    <Button type="primary" onClick={() => fetchLogs(1)}>Lọc</Button>
                 </Space>
             </Card>
 
@@ -133,6 +177,14 @@ const AccessLogs = () => {
                 pagination={pagination}
                 onChange={handleTableChange}
             />
+
+            <Modal title="Lý do vào nhà" open={isModalVisible} onOk={handleOk} onCancel={handleCancel} footer={[
+                <Button key="back" onClick={handleCancel}>
+                    Đóng
+                </Button>
+            ]}>
+                <p>{currentReason}</p>
+            </Modal>
         </div>
     );
 };

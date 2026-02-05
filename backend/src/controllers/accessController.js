@@ -145,8 +145,22 @@ export const manualCheckIn = async (req, res) => {
 
 export const getAccessLogs = async (req, res) => {
     try {
-        const { date, type, page = 1, limit = 20 } = req.query;
+        const { date, type, name, page = 1, limit = 20 } = req.query;
         const query = {};
+
+        // Name Filter (Find personIds first)
+        if (name) {
+            const nameRegex = new RegExp(name, 'i');
+            const residents = await Resident.find({ name: nameRegex }).select('_id');
+            const visitors = await Visitor.find({ name: nameRegex }).select('_id');
+
+            const personIds = [
+                ...residents.map(r => r._id),
+                ...visitors.map(v => v._id)
+            ];
+
+            query.personId = { $in: personIds };
+        }
 
         // Security Check for Resident Role
         if (req.user && req.user.role === 'resident') {
@@ -179,7 +193,7 @@ export const getAccessLogs = async (req, res) => {
             .sort({ timeIn: -1 })
             .limit(limit * 1)
             .skip((page - 1) * limit)
-            .populate('personId', 'name apartment phoneNumber'); // Populate resident info
+            .populate('personId', 'name apartment phoneNumber purpose'); // Populate resident/visitor info
 
         const count = await AccessLog.countDocuments(query);
 
