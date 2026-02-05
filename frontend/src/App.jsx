@@ -14,6 +14,7 @@ import GuardDashboard from './pages/Guard/Dashboard';
 import ResidentLayout from './components/Layout/ResidentLayout';
 import ResidentDashboard from './pages/Resident/Dashboard';
 import NotFound from './pages/NotFound/NotFound';
+import ResidentLookup from './pages/Guard/ResidentLookup';
 
 // Placeholder Pages (will be replaced later)
 // const GuardDashboard = () => <div>Guard Dashboard</div>;
@@ -43,6 +44,7 @@ function App() {
           </ProtectedRoute>
         } >
           <Route index element={<GuardDashboard />} />
+          <Route path="residents" element={<ResidentLookup />} />
         </Route>
 
         {/* Resident Routes */}

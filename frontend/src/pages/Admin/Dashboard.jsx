@@ -39,7 +39,7 @@ const AdminDashboard = () => {
         { title: 'Tổng số Cư dân', value: stats.residents, icon: <TeamOutlined />, color: '#1890ff' },
         { title: 'User Hệ thống', value: stats.users, icon: <UserOutlined />, color: '#722ed1' },
         { title: 'Lượt vào hôm nay', value: stats.todayLogs, icon: <QrcodeOutlined />, color: '#52c41a' },
-        { title: 'Cảnh báo lạ', value: stats.warnings, icon: <AlertOutlined />, color: '#f5222d' },
+        // { title: 'Cảnh báo lạ', value: stats.warnings, icon: <AlertOutlined />, color: '#f5222d' },
     ];
 
     return (
@@ -49,7 +49,7 @@ const AdminDashboard = () => {
                 <>
                     <Row gutter={[16, 16]}>
                         {statCards.map((item, index) => (
-                            <Col xs={24} sm={12} md={6} key={index}>
+                            <Col xs={24} sm={12} md={8} key={index}>
                                 <Card bordered={false} hoverable>
                                     <Statistic
                                         title={item.title}
@@ -75,7 +75,8 @@ const AdminDashboard = () => {
                                             <YAxis />
                                             <Tooltip />
                                             <Legend />
-                                            <Bar dataKey="uv" name="Lượt khách" fill="#1890ff" />
+                                            <Bar dataKey="residents" name="Cư dân" fill="#0088FE" />
+                                            <Bar dataKey="visitors" name="Khách" fill="#FFBB28" />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>

@@ -133,7 +133,14 @@ export const getAllResidents = async (req, res) => {
             query.active = req.query.active === 'true';
         }
 
+
+        let selectFields = '';
+        if (req.user && req.user.role === 'guard') {
+            selectFields = 'name apartment phoneNumber';
+        }
+
         const residents = await Resident.find(query)
+            .select(selectFields)
             .limit(limit * 1)
             .skip((page - 1) * limit)
             // .populate('userId', 'username status') // Lấy kèm thông tin user
